@@ -1,0 +1,63 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.eggs/
+
+# =========================
+# Virtual Environments
+# =========================
+venv/
+env/
+.venv/
+
+# =========================
+# Jupyter / Kaggle / Colab
+# =========================
+.ipynb_checkpoints/
+*.ipynb
+
+# =========================
+# Data files (important!)
+# =========================
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# =========================
+# Logs & outputs
+# =========================
+*.log
+logs/
+outputs/
+results/
+
+# =========================
+# Streamlit
+# =========================
+.streamlit/
+
+# =========================
+# OS / Editor junk
+# =========================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# =========================
+# Environment variables
+# =========================
+.env
+
+# =========================
+# Model artifacts
+# =========================
+*.pkl
+*.joblib
+models/*.bin
