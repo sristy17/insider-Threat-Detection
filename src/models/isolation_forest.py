@@ -1,10 +1,18 @@
+"""Isolation Forest model with persistence."""
 from sklearn.ensemble import IsolationForest
+import joblib
+from config import IF_PARAMS, MODEL_DIR, logger
+
 
 def train(X):
-    model = IsolationForest(
-        n_estimators=200,
-        contamination=0.04,
-        random_state=42
-    )
+    model = IsolationForest(**IF_PARAMS)
     model.fit(X)
+    path = MODEL_DIR / "isolation_forest.joblib"
+    joblib.dump(model, path)
+    logger.info(f"Isolation Forest trained & saved → {path}")
     return model
+
+
+def load():
+    path = MODEL_DIR / "isolation_forest.joblib"
+    return joblib.load(path)
