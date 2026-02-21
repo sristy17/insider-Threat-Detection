@@ -6,3 +6,4 @@ seaborn
 streamlit
 plotly
 joblib
+python-dotenv

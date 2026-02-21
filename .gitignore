@@ -54,6 +54,7 @@ Thumbs.db
 # Environment variables
 # =========================
 .env
+# .env.example is intentionally committed (safe template with no secrets)
 
 # =========================
 # Model artifacts
