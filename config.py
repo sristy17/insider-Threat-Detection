@@ -3,12 +3,18 @@ Centralized configuration for the Insider Threat Detection System.
 All paths, model parameters, and thresholds are defined here.
 """
 from pathlib import Path
+import sys
 import logging
+
+# Add src to path for logger import
+BASE_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(BASE_DIR))
+
+from src.utils.logger import setup_logger
 
 # ──────────────────────────────────────────────
 # Paths
 # ──────────────────────────────────────────────
-BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
 RAW_DIR = DATA_DIR / "raw"
 PROCESSED_DIR = DATA_DIR / "processed"
@@ -77,8 +83,5 @@ RISK_THRESHOLDS = {
 # ──────────────────────────────────────────────
 # Logging
 # ──────────────────────────────────────────────
-LOG_FORMAT = "%(asctime)s │ %(levelname)-8s │ %(message)s"
 LOG_LEVEL = logging.INFO
-
-logging.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
-logger = logging.getLogger("insider_threat")
+logger = setup_logger("insider_threat", level=LOG_LEVEL)
