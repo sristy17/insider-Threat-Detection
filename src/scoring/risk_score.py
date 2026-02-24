@@ -1,8 +1,3 @@
-"""
-Risk scoring engine.
-Combines three model scores + behavioral signals into a 0–100 risk score
-and assigns categorical risk levels.
-"""
 import numpy as np
 from config import RISK_WEIGHTS, RISK_THRESHOLDS
 from src.utils.logger import get_logger
@@ -11,7 +6,6 @@ logger = get_logger("insider_threat.scoring")
 
 
 def compute(row):
-    """Compute weighted risk score from model outputs and behavioural features."""
     raw = (
         RISK_WEIGHTS["if_score"]        * row.get("if_score", 0) +
         RISK_WEIGHTS["svm_score"]       * row.get("svm_score", 0) +
@@ -23,7 +17,6 @@ def compute(row):
 
 
 def normalise_scores(series):
-    """Min-max normalise a pandas Series to 0–100 scale."""
     mn, mx = series.min(), series.max()
     if mx == mn:
         logger.warning("All risk scores are identical (%.4f) — returning zero scores.", mn)
@@ -33,7 +26,6 @@ def normalise_scores(series):
 
 
 def classify_risk(score):
-    """Return risk level string based on thresholds."""
     if score >= RISK_THRESHOLDS["critical"]:
         return "Critical"
     elif score >= RISK_THRESHOLDS["high"]:
@@ -44,7 +36,6 @@ def classify_risk(score):
 
 
 def risk_breakdown(row):
-    """Return dict with per-factor contribution percentages."""
     total = abs(row.get("risk_score", 1)) or 1
     breakdown = {
         "Isolation Forest": round(RISK_WEIGHTS["if_score"]        * row.get("if_score", 0)        / total * 100, 1),

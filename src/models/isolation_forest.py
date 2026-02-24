@@ -1,4 +1,3 @@
-"""Isolation Forest model with persistence."""
 from sklearn.ensemble import IsolationForest
 import joblib
 from config import IF_PARAMS, MODEL_DIR, logger
