@@ -16,6 +16,9 @@ import plotly.express as px
 import plotly.graph_objects as go
 from config import SCORED_CSV, OUTPUT_DIR
 from src.scoring.risk_score import risk_breakdown
+from src.utils.logger import get_logger
+
+logger = get_logger("insider_threat.dashboard")
 
 # ──────────────────────────────────────────────
 # Page config
@@ -126,10 +129,17 @@ st.markdown("""
 @st.cache_data
 def load_data():
     if SCORED_CSV.exists():
+        logger.info("Dashboard: loading pre-computed scores from %s", SCORED_CSV)
         return pd.read_csv(SCORED_CSV)
     # Fallback: run pipeline if no saved data
+    logger.warning(
+        "Dashboard: scored CSV not found at %s — running pipeline now (this may take a moment).",
+        SCORED_CSV,
+    )
     from run_pipeline import run
-    return run()
+    df = run()
+    logger.info("Dashboard: pipeline fallback complete, %d users scored.", len(df))
+    return df
 
 df = load_data()
 
