@@ -178,11 +178,11 @@ with st.sidebar:
         
         # Display streaming status
         if streaming_meta:
-            st.success(f"🔴 LIVE — Batch {streaming_meta['batch_num']}/{streaming_meta['total_batches']}")
+            st.success(f" LIVE — Batch {streaming_meta['batch_num']}/{streaming_meta['total_batches']}")
             st.caption(f"Last update: {datetime.fromisoformat(streaming_meta['timestamp']).strftime('%H:%M:%S')}")
             st.caption(f"Users: {streaming_meta['total_users_processed']}")
         else:
-            st.info("⚪ Static Mode")
+            st.info(" Static Mode")
         
         # Auto-refresh logic
         elapsed = time.time() - st.session_state.last_refresh
@@ -255,12 +255,12 @@ if streaming_meta and st.session_state.auto_refresh_enabled:
     
     col_a, col_b, col_c = st.columns(3)
     with col_a:
-        st.info(f"📊 Batch {streaming_meta['batch_num']}/{streaming_meta['total_batches']} in progress")
+        st.info(f" Batch {streaming_meta['batch_num']}/{streaming_meta['total_batches']} in progress")
     with col_b:
-        st.warning(f"🚨 {streaming_meta['critical_risk_count']} Critical + {streaming_meta['high_risk_count']} High risk users detected")
+        st.warning(f" {streaming_meta['critical_risk_count']} Critical + {streaming_meta['high_risk_count']} High risk users detected")
     with col_c:
         last_update = datetime.fromisoformat(streaming_meta['timestamp'])
-        st.success(f"🕐 Last updated: {last_update.strftime('%H:%M:%S')}")
+        st.success(f" Last updated: {last_update.strftime('%H:%M:%S')}")
     
     st.markdown("")
 
