@@ -23,29 +23,21 @@ from src.utils.logger import get_logger
 
 logger = get_logger("insider_threat.dashboard")
 
-# ──────────────────────────────────────────────
-# Page config
-# ──────────────────────────────────────────────
 st.set_page_config(
-    page_title="Insider Threat Detection — SOC",
-    page_icon="🛡️",
+    page_title="Insider Threat Detection SOC",
+    page_icon="",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-# ──────────────────────────────────────────────
-# Custom CSS — dark SOC theme
-# ──────────────────────────────────────────────
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-    /* Global */
     .stApp {
         font-family: 'Inter', sans-serif;
     }
 
-    /* Metric cards */
     div[data-testid="stMetric"] {
         background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
         border: 1px solid #0f3460;
@@ -66,7 +58,6 @@ st.markdown("""
         color: #e2e8f0 !important;
     }
 
-    /* Section headers */
     .section-header {
         color: #e2e8f0;
         font-size: 1.3rem;
@@ -79,7 +70,6 @@ st.markdown("""
         gap: 8px;
     }
 
-    /* Risk badges */
     .risk-badge {
         display: inline-block;
         padding: 4px 14px;
@@ -94,7 +84,6 @@ st.markdown("""
     .risk-medium   { background: #d6990022; color: #fefcbf; border: 1px solid #d69e2e; }
     .risk-low      { background: #38a16922; color: #9ae6b4; border: 1px solid #38a169; }
 
-    /* Sidebar */
     section[data-testid="stSidebar"] {
         background: linear-gradient(180deg, #0d1117 0%, #161b22 100%);
     }
@@ -103,13 +92,11 @@ st.markdown("""
         font-size: 1.1rem;
     }
 
-    /* Tables */
     .stDataFrame {
         border-radius: 8px;
         overflow: hidden;
     }
 
-    /* Title banner */
     .dashboard-title {
         background: linear-gradient(135deg, #0f3460 0%, #533483 50%, #e94560 100%);
         -webkit-background-clip: text;
@@ -134,9 +121,9 @@ def load_data():
     if SCORED_CSV.exists():
         logger.info("Dashboard: loading pre-computed scores from %s", SCORED_CSV)
         return pd.read_csv(SCORED_CSV)
-    # Fallback: run pipeline if no saved data
+  
     logger.warning(
-        "Dashboard: scored CSV not found at %s — running pipeline now (this may take a moment).",
+        "Dashboard: scored CSV not found at %s — running pipeline now.",
         SCORED_CSV,
     )
     from run_pipeline import run
@@ -160,9 +147,6 @@ if "auto_refresh_enabled" not in st.session_state:
 df = load_data()
 streaming_meta = load_streaming_metadata()
 
-# ──────────────────────────────────────────────
-# Colour helpers
-# ──────────────────────────────────────────────
 RISK_COLORS = {
     "Critical": "#e53e3e",
     "High":     "#dd6b20",
@@ -174,11 +158,9 @@ def risk_badge(level):
     css = f"risk-{level.lower()}"
     return f'<span class="risk-badge {css}">{level}</span>'
 
-# ──────────────────────────────────────────────
-# Sidebar
-# ──────────────────────────────────────────────
+
 with st.sidebar:
-    st.markdown("# 🛡️ SOC Controls")
+    st.markdown("# SOC Controls")
     st.markdown("---")
     
     # Real-time streaming controls
@@ -221,14 +203,12 @@ with st.sidebar:
     
     st.markdown("---")
 
-    # Risk level filter
     levels = st.multiselect(
         "Risk Levels",
         options=["Critical", "High", "Medium", "Low"],
         default=["Critical", "High", "Medium", "Low"],
     )
 
-    # Role filter
     if "role" in df.columns:
         roles = st.multiselect(
             "Roles",
@@ -238,7 +218,6 @@ with st.sidebar:
     else:
         roles = None
 
-    # Score range
     score_range = st.slider(
         "Risk Score Range",
         min_value=0.0,
@@ -248,19 +227,16 @@ with st.sidebar:
     )
 
     st.markdown("---")
-    st.markdown("##### 📥 Export")
+    st.markdown("##### Export")
     if st.button("Download Alerts CSV", use_container_width=True):
         alerts = df[df["risk_level"].isin(["Critical", "High"])]
         csv = alerts.to_csv(index=False)
-        st.download_button("⬇ Download", csv, "threat_alerts.csv", "text/csv", use_container_width=True)
+        st.download_button("Download", csv, "threat_alerts.csv", "text/csv", use_container_width=True)
 
     st.markdown("---")
     st.caption("Insider Threat Detection v2.0")
     st.caption("Powered by IF · SVM · Autoencoder")
 
-# ──────────────────────────────────────────────
-# Apply filters
-# ──────────────────────────────────────────────
 filtered = df[
     (df["risk_level"].isin(levels)) &
     (df["risk_score"] >= score_range[0]) &
@@ -269,10 +245,7 @@ filtered = df[
 if roles is not None:
     filtered = filtered[filtered["role"].isin(roles)]
 
-# ──────────────────────────────────────────────
-# Header
-# ──────────────────────────────────────────────
-st.markdown('<p class="dashboard-title">🛡️ Insider Threat Detection</p>', unsafe_allow_html=True)
+st.markdown('<p class="dashboard-title">Insider Threat Detection</p>', unsafe_allow_html=True)
 st.markdown('<p class="dashboard-subtitle">Security Operations Center — Real-time Anomaly Monitoring Dashboard</p>', unsafe_allow_html=True)
 
 # Streaming status banner
@@ -295,22 +268,18 @@ if streaming_meta and st.session_state.auto_refresh_enabled:
 # KPI Metrics
 # ──────────────────────────────────────────────
 c1, c2, c3, c4, c5 = st.columns(5)
-c1.metric("👥 Total Employees", len(df))
-c2.metric("🔴 Critical", len(df[df["risk_level"] == "Critical"]))
-c3.metric("🟠 High Risk", len(df[df["risk_level"] == "High"]))
-c4.metric("📊 Avg Score", f"{df['risk_score'].mean():.1f}")
-c5.metric("⚠️ Max Score", f"{df['risk_score'].max():.1f}")
+c1.metric("Total Employees", len(df))
+c2.metric("Critical", len(df[df["risk_level"] == "Critical"]))
+c3.metric("High Risk", len(df[df["risk_level"] == "High"]))
+c4.metric("Avg Score", f"{df['risk_score'].mean():.1f}")
+c5.metric("Max Score", f"{df['risk_score'].max():.1f}")
 
 st.markdown("")
 
-# ──────────────────────────────────────────────
-# Row 1: Risk Distribution + Risk by Role
-# ──────────────────────────────────────────────
-st.markdown('<div class="section-header">📊 Risk Overview</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-header">Risk Overview</div>', unsafe_allow_html=True)
 col1, col2 = st.columns([3, 2])
 
 with col1:
-    # Risk distribution histogram
     fig_hist = px.histogram(
         filtered,
         x="risk_score",
@@ -332,7 +301,6 @@ with col1:
     st.plotly_chart(fig_hist, use_container_width=True)
 
 with col2:
-    # Risk level breakdown pie
     risk_counts = filtered["risk_level"].value_counts().reset_index()
     risk_counts.columns = ["Risk Level", "Count"]
     fig_pie = px.pie(
@@ -354,10 +322,7 @@ with col2:
     fig_pie.update_traces(textinfo="percent+label", textfont_size=12)
     st.plotly_chart(fig_pie, use_container_width=True)
 
-# ──────────────────────────────────────────────
-# Row 2: Model Comparison Scatter + Role Heatmap
-# ──────────────────────────────────────────────
-st.markdown('<div class="section-header">🤖 Model Analytics</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-header">Model Analytics</div>', unsafe_allow_html=True)
 col3, col4 = st.columns(2)
 
 with col3:
@@ -385,7 +350,6 @@ with col3:
 
 with col4:
     if "role" in filtered.columns:
-        # Role vs Risk Level heatmap
         cross = pd.crosstab(filtered["role"], filtered["risk_level"])
         for lev in ["Critical", "High", "Medium", "Low"]:
             if lev not in cross.columns:
@@ -414,10 +378,7 @@ with col4:
         )
         st.plotly_chart(fig_heat, use_container_width=True)
 
-# ──────────────────────────────────────────────
-# Row 3: Alerts Table
-# ──────────────────────────────────────────────
-st.markdown('<div class="section-header">🚨 Threat Alerts</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-header">Threat Alerts</div>', unsafe_allow_html=True)
 
 display_cols = ["user_id", "risk_score", "risk_level"]
 if "role" in filtered.columns:
@@ -426,7 +387,6 @@ for extra in ["if_score", "svm_score", "ae_score", "sensitive_total", "failed_to
     if extra in filtered.columns:
         display_cols.append(extra)
 
-# Format risk scores
 alerts_df = filtered[display_cols].copy()
 alerts_df["risk_score"] = alerts_df["risk_score"].round(1)
 for sc in ["if_score", "svm_score", "ae_score"]:
@@ -449,10 +409,7 @@ st.dataframe(
     },
 )
 
-# ──────────────────────────────────────────────
-# Row 4: User Drilldown
-# ──────────────────────────────────────────────
-st.markdown('<div class="section-header">🔍 User Drilldown</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-header">User Drilldown</div>', unsafe_allow_html=True)
 
 selected_user = st.selectbox(
     "Select a user to inspect",
@@ -463,7 +420,6 @@ selected_user = st.selectbox(
 if selected_user is not None:
     user_row = filtered[filtered["user_id"] == selected_user].iloc[0]
 
-    # Info columns
     d1, d2, d3 = st.columns(3)
     with d1:
         level = user_row.get("risk_level", "Unknown")
@@ -480,7 +436,6 @@ if selected_user is not None:
         if "usb_total" in user_row.index:
             st.metric("USB Activity Score", f"{user_row['usb_total']:.2f}")
 
-    # Risk factor breakdown chart
     st.markdown("**Risk Factor Breakdown:**")
     breakdown = risk_breakdown(user_row)
     bd_df = pd.DataFrame(list(breakdown.items()), columns=["Factor", "Contribution %"])
@@ -505,7 +460,6 @@ if selected_user is not None:
     )
     st.plotly_chart(fig_bar, use_container_width=True)
 
-    # Feature radar chart
     feature_cols_radar = ["login_mean", "login_std", "files_mean", "files_max",
                           "sensitive_total", "failed_total", "emails_mean",
                           "after_hours_mean", "usb_total", "vpn_total"]
@@ -535,13 +489,10 @@ if selected_user is not None:
         )
         st.plotly_chart(fig_radar, use_container_width=True)
 
-# ──────────────────────────────────────────────
-# Footer
-# ──────────────────────────────────────────────
 st.markdown("---")
 st.markdown(
     '<p style="text-align:center; color:#4a5568; font-size:0.8rem;">'
-    '🛡️ Insider Threat Detection System v2.0 — '
+    'Insider Threat Detection System v2.0 — '
     'Powered by Isolation Forest · One-Class SVM · Autoencoder'
     '</p>',
     unsafe_allow_html=True,

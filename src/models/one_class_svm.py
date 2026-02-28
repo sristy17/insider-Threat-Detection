@@ -1,4 +1,3 @@
-"""One-Class SVM model with persistence."""
 from sklearn.svm import OneClassSVM
 import joblib
 from config import SVM_PARAMS, MODEL_DIR, logger

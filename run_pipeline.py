@@ -1,7 +1,3 @@
-"""
-Main pipeline — feature engineering → model training → risk scoring.
-Saves trained models and scored output so the dashboard loads instantly.
-"""
 import sys
 import traceback
 import pandas as pd
@@ -15,10 +11,9 @@ from src.scoring.risk_score import compute, normalise_scores, classify_risk
 
 
 def run():
-    logger.info("═══ Pipeline start ═══")
+    logger.info("Pipeline start")
 
-    # ── Step 1: Feature engineering ──────────────────────────────────────────
-    logger.info("[1/5] Building features from raw employee logs …")
+    logger.info("[1/5] Building features from raw employee logs")
     try:
         build_features()
     except Exception:
@@ -30,30 +25,28 @@ def run():
     X = df[feature_cols]
     logger.info("[1/5] Feature matrix ready: %d users × %d features", len(X), len(feature_cols))
 
-    # ── Step 2: Train models ──────────────────────────────────────────────────
-    logger.info("[2/5] Training Isolation Forest …")
+    logger.info("[2/5] Training Isolation Forest")
     try:
         if_model = train_if(X)
     except Exception:
         logger.error("[2/5] Isolation Forest training failed:\n%s", traceback.format_exc())
         raise
 
-    logger.info("[3/5] Training One-Class SVM …")
+    logger.info("[3/5] Training One-Class SVM")
     try:
         svm_model = train_svm(X)
     except Exception:
         logger.error("[3/5] One-Class SVM training failed:\n%s", traceback.format_exc())
         raise
 
-    logger.info("[4/5] Training Autoencoder (MLPRegressor) …")
+    logger.info("[4/5] Training Autoencoder (MLPRegressor)")
     try:
         ae_model = train_ae(X)
     except Exception:
         logger.error("[4/5] Autoencoder training failed:\n%s", traceback.format_exc())
         raise
 
-    # ── Step 3: Compute raw anomaly scores ───────────────────────────────────
-    logger.info("[5/5] Computing anomaly & risk scores …")
+    logger.info("[5/5] Computing anomaly & risk scores")
     df["if_score"]  = -if_model.decision_function(X)
     df["svm_score"] = -svm_model.decision_function(X)
     df["ae_score"]  = reconstruction_error(ae_model, X)
@@ -64,12 +57,10 @@ def run():
         df["ae_score"].mean(),
     )
 
-    # ── Step 4: Risk scoring ──────────────────────────────────────────────────
     df["risk_score_raw"] = df.apply(compute, axis=1)
     df["risk_score"]     = normalise_scores(df["risk_score_raw"])
     df["risk_level"]     = df["risk_score"].apply(classify_risk)
 
-    # ── Step 5: Sort & save ───────────────────────────────────────────────────
     df = df.sort_values("risk_score", ascending=False).reset_index(drop=True)
     df.to_csv(SCORED_CSV, index=False)
     logger.info("Scored data saved → %s", SCORED_CSV)
@@ -84,7 +75,7 @@ def run():
             critical_count,
         )
 
-    logger.info("═══ Pipeline complete ═══")
+    logger.info("Pipeline complete")
     return df
 
 
