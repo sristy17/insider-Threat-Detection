@@ -164,7 +164,7 @@ with st.sidebar:
     st.markdown("---")
     
     # Real-time streaming controls
-    st.markdown("##### 🌊 Streaming Mode")
+    st.markdown("#####  Streaming Mode")
     auto_refresh = st.toggle("Auto-refresh", value=st.session_state.auto_refresh_enabled)
     st.session_state.auto_refresh_enabled = auto_refresh
     
