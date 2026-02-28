@@ -1,0 +1,2 @@
+batch_num,total_batches,users_in_batch,total_users_processed,timestamp,high_risk_count,critical_risk_count
+20,20,10,200,2026-02-23T11:04:33.563834,17,5
