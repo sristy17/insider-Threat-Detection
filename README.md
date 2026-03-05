@@ -86,11 +86,35 @@ This bridges the gap between **ML output and security decision-making**.
   pip install -r requirements.txt
 ```
 ### Run the Application
+
+#### Option 1: Standard Batch Processing
 ```sh
 python generate_data.py
 python run_pipeline.py
 streamlit run dashboard/app.py
 ```
+
+#### Option 2: 🌊 Near-Real-Time Streaming Simulation (NEW!)
+```sh
+# One-command demo with auto-refresh dashboard
+python start_streaming_demo.py
+```
+
+Or manually:
+```sh
+# Terminal 1: Start streaming simulation
+python stream_simulation.py
+
+# Terminal 2: Start dashboard with auto-refresh
+streamlit run dashboard/app.py
+# Toggle "Auto-refresh" in the sidebar
+```
+
+See [STREAMING.md](STREAMING.md) for detailed documentation on:
+- How streaming simulation works
+- Configuration options
+- Dashboard auto-refresh features
+- Real-world deployment considerations
 
 ## Contributing
 1. Fork the repository.

@@ -1,3 +1,9 @@
+"""
+Insider Threat Detection — SOC Dashboard
+Premium dark-themed dashboard with interactive filters,
+user drilldown, heatmaps, and risk visualisations.
+Supports near-real-time updates for streaming data.
+"""
 import sys
 from pathlib import Path
 
@@ -9,6 +15,8 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
+from datetime import datetime
+import time
 from config import SCORED_CSV, OUTPUT_DIR
 from src.scoring.risk_score import risk_breakdown
 from src.utils.logger import get_logger
@@ -105,7 +113,10 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-@st.cache_data
+# ──────────────────────────────────────────────
+# Load data (pre-computed by pipeline)
+# ──────────────────────────────────────────────
+@st.cache_data(ttl=None)  # Cache cleared manually for refresh
 def load_data():
     if SCORED_CSV.exists():
         logger.info("Dashboard: loading pre-computed scores from %s", SCORED_CSV)
@@ -120,7 +131,21 @@ def load_data():
     logger.info("Dashboard: pipeline fallback complete, %d users scored.", len(df))
     return df
 
+def load_streaming_metadata():
+    """Load streaming batch metadata if available."""
+    metadata_path = OUTPUT_DIR / "streaming" / "batch_metadata.csv"
+    if metadata_path.exists():
+        return pd.read_csv(metadata_path).iloc[-1].to_dict()
+    return None
+
+# Initialize session state for auto-refresh
+if "last_refresh" not in st.session_state:
+    st.session_state.last_refresh = time.time()
+if "auto_refresh_enabled" not in st.session_state:
+    st.session_state.auto_refresh_enabled = False
+
 df = load_data()
+streaming_meta = load_streaming_metadata()
 
 RISK_COLORS = {
     "Critical": "#e53e3e",
@@ -136,6 +161,46 @@ def risk_badge(level):
 
 with st.sidebar:
     st.markdown("# SOC Controls")
+    st.markdown("---")
+    
+    # Real-time streaming controls
+    st.markdown("#####  Streaming Mode")
+    auto_refresh = st.toggle("Auto-refresh", value=st.session_state.auto_refresh_enabled)
+    st.session_state.auto_refresh_enabled = auto_refresh
+    
+    if auto_refresh:
+        refresh_interval = st.select_slider(
+            "Refresh Interval",
+            options=[5, 10, 15, 30, 60],
+            value=10,
+            format_func=lambda x: f"{x}s"
+        )
+        
+        # Display streaming status
+        if streaming_meta:
+            st.success(f" LIVE — Batch {streaming_meta['batch_num']}/{streaming_meta['total_batches']}")
+            st.caption(f"Last update: {datetime.fromisoformat(streaming_meta['timestamp']).strftime('%H:%M:%S')}")
+            st.caption(f"Users: {streaming_meta['total_users_processed']}")
+        else:
+            st.info(" Static Mode")
+        
+        # Auto-refresh logic
+        elapsed = time.time() - st.session_state.last_refresh
+        if elapsed >= refresh_interval:
+            st.session_state.last_refresh = time.time()
+            load_data.clear()  # Clear cache
+            st.rerun()
+        else:
+            remaining = int(refresh_interval - elapsed)
+            st.caption(f"Next refresh in {remaining}s...")
+            time.sleep(1)
+            st.rerun()
+    else:
+        if st.button("🔄 Manual Refresh", use_container_width=True):
+            load_data.clear()
+            st.session_state.last_refresh = time.time()
+            st.rerun()
+    
     st.markdown("---")
 
     levels = st.multiselect(
@@ -183,6 +248,25 @@ if roles is not None:
 st.markdown('<p class="dashboard-title">Insider Threat Detection</p>', unsafe_allow_html=True)
 st.markdown('<p class="dashboard-subtitle">Security Operations Center — Real-time Anomaly Monitoring Dashboard</p>', unsafe_allow_html=True)
 
+# Streaming status banner
+if streaming_meta and st.session_state.auto_refresh_enabled:
+    progress = streaming_meta['total_users_processed'] / (streaming_meta['total_batches'] * 10)  # Approximate
+    st.progress(min(progress, 1.0))
+    
+    col_a, col_b, col_c = st.columns(3)
+    with col_a:
+        st.info(f" Batch {streaming_meta['batch_num']}/{streaming_meta['total_batches']} in progress")
+    with col_b:
+        st.warning(f" {streaming_meta['critical_risk_count']} Critical + {streaming_meta['high_risk_count']} High risk users detected")
+    with col_c:
+        last_update = datetime.fromisoformat(streaming_meta['timestamp'])
+        st.success(f" Last updated: {last_update.strftime('%H:%M:%S')}")
+    
+    st.markdown("")
+
+# ──────────────────────────────────────────────
+# KPI Metrics
+# ──────────────────────────────────────────────
 c1, c2, c3, c4, c5 = st.columns(5)
 c1.metric("Total Employees", len(df))
 c2.metric("Critical", len(df[df["risk_level"] == "Critical"]))
